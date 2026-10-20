@@ -1,0 +1,26 @@
+{
+  "id": "river_defense",
+  "name": "死守渡口",
+  "desc": "你的部队必须守住地图中央的桥梁10个回合，抵御敌军的装甲突击。",
+  "seed": 2024,
+  "factions": ["USA", "RUS"],
+  "ctrl": "USA",
+  "turns": 15,
+  "deployments": {
+    "USA": [
+      { "key": "iv", "c": 5, "r": 10 },
+      { "key": "at", "c": 6, "r": 9 },
+      { "key": "tk", "c": 4, "r": 11 }
+    ],
+    "RUS": [
+      { "key": "tk2", "c": 20, "r": 5 },
+      { "key": "iv", "c": 21, "r": 6 },
+      { "key": "bmp", "c": 19, "r": 7 }
+    ]
+  },
+  "objectives": {
+    "capture_hexes": [{ "c": 10, "r": 10, "name": "中央桥梁" }],
+    "survive_turns": 10,
+    "eliminate_all": false
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "mtw",
+  "version": "7.0.0",
+  "description": "现代战术兵棋 MTW",
+  "main": "main.js",
+  "author": "hwj/yhh",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.mtw.game",
+    "productName": "MTW",
+    "asar": false,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "mods/**/*"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    }
+  }
+}

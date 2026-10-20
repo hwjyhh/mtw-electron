@@ -1,0 +1,8 @@
+node_modules/
+dist/
+out/
+win-unpacked/
+release/
+*.exe
+.DS_Store
+.vscode
