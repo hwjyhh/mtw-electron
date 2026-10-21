@@ -1,3 +1,5 @@
+点击这里，直接在浏览器中游玩MTW v7.0网页版
+https://hwjyhh.github.io/mtw-electron/
 ## ⚠️ Code Warning & Disclaimer
 
 > **"Spaghetti code ahead, but it runs at 60 FPS."**
