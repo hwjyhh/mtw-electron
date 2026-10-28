@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>现代战术兵棋 MTW v7.0 — 模块化</title>
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/panels.css">
+<link rel="stylesheet" href="css/overlays.css">
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div class="brand">现代战术兵棋 <span>v7.0 · 模块化</span></div>
+    <button id="btnNew">新建</button>
+    <button id="btnMapEd">地图</button>
+    <button id="btnUnitEd">棋子</button>
+    <button id="btnWpnLib">武器库</button>
+    <button id="btnDatabase">📚资料库</button>
+    <button id="btnSave">保存</button>
+    <button id="btnLoad">读取</button>
+    <div class="spacer"></div>
+    <span class="kbd-hint">
+      <span class="kbd">WASD</span>视角 <span class="kbd">空格</span>结束 <span class="kbd">Q/E</span>旋转
+      <span class="kbd">1-9</span>武器 <span class="kbd">R</span>远程 <span class="kbd">A</span>攻击移动
+      <span class="kbd">G</span>放置 <span class="kbd">S</span>姿态 <span class="kbd">Esc</span>取消
+    </span>
+    <button id="btnSide0ai" class="sm">蓝方：人类</button>
+    <button id="btnSide1ai" class="sm">红方：AI</button>
+    <button id="btnSandbox" class="sm">🧪 沙盒：关</button>
+    <button id="btnEnd" class="active">结束回合 ▶</button>
+  </div>
+
+  <div id="main">
+    <aside id="left"></aside>
+
+    <div id="stage">
+      <button class="ui-toggle-btn" id="btnToggleLeft" onclick="toggleSidebar('left')">◀ 收起</button>
+      <button class="ui-toggle-btn" id="btnToggleRight" onclick="toggleSidebar('right')">收起 ▶</button>
+      <canvas id="cv"></canvas>
+      <div id="sideBanner">蓝方行动</div>
+      <div id="rangedHint">🎯 远程火力模式 — 点击地图任意格呼叫区域打击，按 Esc 取消</div>
+      <div id="engineerHint">🔨 工兵模式 — 点击目标执行行动，按 Esc 取消</div>
+      <div id="ewHint">📡 电子战模式 — 点击目标格执行干扰/侦察/欺骗，按 Esc 取消</div>
+      <div id="floatTools"></div>
+    </div>
+
+    <aside id="right"></aside>
+  </div>
+
+  <div id="statusbar">
+    <span id="stCoord">—</span>
+    <span id="stHint">左键选择 / 右键取消 / 拖拽平移 / 滚轮缩放</span>
+    <span id="stZoom">100%</span>
+  </div>
+</div>
+
+<!-- 模态框容器，由 ui/modals-*.js 动态注入 -->
+ 
+<!-- ============ 核心层 ============ -->
+<script src="js/core/constants.js"></script>
+<script src="js/core/geometry.js"></script>
+<script src="js/core/state.js"></script>
+<script src="js/core/log.js"></script>
+<script src="js/core/data-weapons.js"></script>
+<script src="js/core/data-units.js"></script>
+
+<!-- ============ 业务系统层 ============ -->
+<script src="js/systems/terrain.js"></script>
+<script src="js/systems/visibility.js"></script>
+<script src="js/systems/combat.js"></script>
+<script src="js/systems/movement.js"></script>
+<script src="js/systems/area-fire.js"></script>
+<script src="js/systems/ew.js"></script>
+<script src="js/systems/engineer.js"></script>
+<script src="js/systems/radar.js"></script>
+<script src="js/systems/missiles.js"></script>
+
+<!-- ============ 渲染层 ============ -->
+<script src="js/render/canvas.js"></script>
+<script src="js/render/terrain-layer.js"></script>
+<script src="js/render/unit-layer.js"></script>
+<script src="js/render/effects.js"></script>
+<script src="js/render/overlays.js"></script>
+<script src="js/render/draw.js"></script>
+
+<!-- ============ AI 层 ============ -->
+<script src="js/ai/prefs.js"></script>
+<script src="js/ai/tactics.js"></script>
+<script src="js/ai/battlegroups.js"></script>
+<script src="js/ai/speed.js"></script>
+<script src="js/ai/watchdog.js"></script>
+
+<!-- ============ UI 层 ============ -->
+<script src="js/ui/sidebar-left.js"></script>
+<script src="js/ui/sidebar-right.js"></script>
+<script src="js/ui/ew-console.js"></script>
+<script src="js/ui/ai-speed-panel.js"></script>
+<script src="js/ui/macro-panel.js"></script>
+<script src="js/ui/taskforce-panel.js"></script>
+<script src="js/ui/modals.js"></script>
+<script src="js/ui/hud.js"></script>
+<script src="js/ui/radar-panel.js"></script>
+
+<!-- ============ 输入层 ============ -->
+<script src="js/input/keyboard.js"></script>
+<script src="js/input/mouse.js"></script>
+<script src="js/input/selection.js"></script>
+
+<!-- ============ 游戏逻辑层 ============ -->
+<script src="js/game/init.js"></script>
+<script src="js/game/turn.js"></script>
+<script src="js/game/save.js"></script>
+
+<!-- ============ Mod 层 ============ -->
+<script src="js/mod/api.js"></script>
+<script src="js/mod/loader.js"></script>
+
+<!-- ============ 启动（最后） ============ -->
+<script src="js/main.js"></script>
+</body>
+</html>

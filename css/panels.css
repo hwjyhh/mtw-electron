@@ -1,0 +1,244 @@
+/* === 面板容器 === */
+.panel {
+  border-bottom: 1px solid var(--bg-2);
+  padding: 6px 9px;
+  background: rgba(13, 17, 23, 0.85) !important;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(88, 166, 255, 0.15);
+}
+.panel h3 {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--fg-mute);
+  margin-bottom: 5px;
+  font-weight: 600;
+  text-shadow: 0 0 6px rgba(88, 166, 255, 0.5);
+}
+
+/* === 行式键值 === */
+.row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  padding: 1px 0;
+  gap: 6px;
+}
+.row .k { color: var(--fg-mute); }
+.row .v { color: var(--fg-1); text-align: right; font-weight: 500; }
+
+/* === 进度条 === */
+.bar {
+  height: 5px;
+  background: var(--bg-2);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 3px 0;
+}
+.bar > i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  transition: .3s;
+}
+
+/* === 战场日志 === */
+#logbox {
+  height: 120px;
+  overflow-y: auto;
+  font-size: 10.5px;
+  line-height: 1.5;
+  padding: 5px 10px;
+  background: #0a0d12;
+  font-family: Consolas, monospace;
+}
+#logbox div { border-bottom: 1px solid var(--bg-1); padding: 1px 0; }
+.lg-hit    { color: var(--bad); }
+.lg-ok     { color: var(--good); }
+.lg-info   { color: var(--accent); }
+.lg-ew     { color: var(--warn); }
+.lg-sys    { color: var(--fg-dim); }
+.lg-aps    { color: var(--purple); }
+.lg-ranged { color: #ff9f5a; font-weight: 600; }
+.lg-comm   { color: var(--blue); }
+.lg-crypto { color: var(--orange); font-weight: 600; }
+
+/* === 单位列表 === */
+#unitlist {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.uItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 5px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 10.5px;
+  border: 1px solid transparent;
+}
+.uItem:hover { background: var(--bg-1); border-color: var(--bg-3); }
+.uItem.sel { background: var(--bg-hi-soft); border-color: var(--bg-hi); }
+.dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+/* === 网格工具类 === */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; }
+.grid4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; }
+
+label {
+  font-size: 10.5px;
+  color: var(--fg-mute);
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* === 武器选择行 === */
+.wpnSelRow {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  padding: 1.5px 3px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.wpnSelRow:hover { background: var(--bg-1); }
+.wpnSelRow input { width: auto; }
+
+/* === 姿态按钮 === */
+.stanceRow { display: flex; gap: 3px; margin-top: 4px; }
+.stanceRow button { flex: 1; font-size: 10px; padding: 2px 3px; }
+
+/* === 结束回合（取消 AI 变红） === */
+#btnEnd.cancel-ai {
+  background: #8b2020 !important;
+  border-color: var(--bad) !important;
+  color: #fff !important;
+}
+
+/* === 模态框通用 === */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: #000a;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.modal.on { display: flex; }
+.modalBox {
+  background: var(--bg-1);
+  border: 1px solid var(--bg-3);
+  border-radius: 8px;
+  padding: 14px;
+  max-width: 900px;
+  width: 92%;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+.modalBox h2 {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: var(--accent);
+}
+
+/* === 资料库 tabs === */
+.dbTabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--bg-3);
+  padding-bottom: 4px;
+  flex-wrap: wrap;
+}
+.dbTab {
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  background: var(--bg-2);
+  border: 1px solid var(--bg-3);
+}
+.dbTab.on { background: var(--bg-hi); border-color: var(--accent); color: #fff; }
+.dbPane { display: none; }
+.dbPane.on { display: block; }
+
+.dbTable { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+.dbTable th, .dbTable td {
+  padding: 3px 5px;
+  border-bottom: 1px solid var(--bg-2);
+  text-align: left;
+}
+.dbTable th {
+  color: var(--fg-mute);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  background: var(--bg-1);
+}
+.dbTable tr:hover { background: var(--bg-1); }
+.dbSearch { display: flex; gap: 5px; margin-bottom: 8px; }
+
+/* === 地图类型选择卡 === */
+.mapTypeGrid {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.mapTypeCard {
+  padding: 8px;
+  border: 2px solid var(--bg-3);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: .15s;
+  background: var(--bg-0);
+}
+.mapTypeCard:hover { border-color: var(--accent); background: var(--bg-1); }
+.mapTypeCard.sel {
+  border-color: var(--gold);
+  background: #1f2f1f;
+  box-shadow: 0 0 0 2px #f0b72f55;
+}
+.mapTypeCard .mt-name { font-weight: 700; font-size: 12px; color: var(--fg-1); margin-bottom: 3px; }
+.mapTypeCard .mt-icon { font-size: 22px; margin-bottom: 3px; display: block; }
+.mapTypeCard .mt-desc { font-size: 9.5px; color: var(--fg-mute); line-height: 1.3; }
+
+.mapSizeGrid { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; }
+.mapSizeCard {
+  padding: 5px 8px;
+  border: 1px solid var(--bg-3);
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 10.5px;
+  background: var(--bg-0);
+  transition: .15s;
+}
+.mapSizeCard:hover { border-color: var(--accent); }
+.mapSizeCard.sel { background: var(--bg-hi); border-color: var(--blue); color: #fff; }
+
+/* === 地形调色板 === */
+.toolGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 3px;
+}
+.tool {
+  padding: 4px;
+  border-radius: 3px;
+  border: 1px solid var(--bg-3);
+  color: #111;
+  font-size: 9.5px;
+  text-align: center;
+  cursor: pointer;
+  text-shadow: 0 0 2px #fff8;
+}
+.tool.sel { outline: 2px solid var(--gold); }

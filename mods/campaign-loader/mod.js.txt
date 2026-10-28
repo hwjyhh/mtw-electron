@@ -1,0 +1,332 @@
+/* ============================================================
+ * mods/campaign-loader/mod.js — 战役加载器 + 新地图类型
+ * 提供：window.loadCampaign(src)、顶栏“战役”按钮、目标点判定
+ * ============================================================ */
+(function () {
+  'use strict';
+  if (!window.MTW) { console.warn('[campaign-loader] MTW 未就绪'); return; }
+
+  /* ---------- 1. 新地图类型 ---------- */
+  function buildAirport(cols, rows) {
+    const m = makeMap(cols, rows, 'open');
+    const setT = (c, r, id) => { if (c >= 0 && r >= 0 && c < cols && r < rows) m.cells[r][c].t = T_IDX[id]; };
+    const setE = (c, r, v) => { if (c >= 0 && r >= 0 && c < cols && r < rows) m.cells[r][c].elev = v; };
+
+    // 底噪
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++)
+      setT(c, r, Math.random() < 0.55 ? 'open' : 'grass');
+
+    // 两条跑道
+    const rw1 = Math.floor(rows * 0.30), rw2 = Math.floor(rows * 0.70);
+    const c0 = Math.floor(cols * 0.10), c1 = Math.floor(cols * 0.90);
+    for (let c = c0; c < c1; c++) {
+      setT(c, rw1, 'runway'); setT(c, rw1 + 1, 'runway');
+      setT(c, rw2, 'runway'); setT(c, rw2 - 1, 'runway');
+    }
+    // 滑行道连接
+    for (let r = rw1; r <= rw2; r++) { setT(c0 + 3, r, 'runway'); setT(c1 - 3, r, 'runway'); }
+
+    // 航站楼（中央大块）
+    const tc0 = Math.floor(cols * 0.42), tc1 = Math.floor(cols * 0.58);
+    const tr0 = Math.floor(rows * 0.42), tr1 = Math.floor(rows * 0.56);
+    for (let c = tc0; c <= tc1; c++) for (let r = tr0; r <= tr1; r++)
+      setT(c, r, (c === tc0 || c === tc1 || r === tr0 || r === tr1) ? 'airport' : 'city');
+
+    // 机库（北侧一排工业区）
+    for (let i = 0; i < 8; i++) {
+      const c = Math.floor(cols * 0.18) + i * Math.floor(cols * 0.075);
+      const r = Math.floor(rows * 0.12);
+      for (let dr = 0; dr < 2; dr++) for (let dc = 0; dc < 2; dc++)
+        setT(c + dc, r + dr, 'industry');
+    }
+    // 油库/工业（南侧）
+    for (let i = 0; i < 5; i++) {
+      const c = Math.floor(cols * 0.25) + i * Math.floor(cols * 0.10);
+      const r = Math.floor(rows * 0.85);
+      setT(c, r, 'industry'); setT(c + 1, r, 'industry');
+    }
+
+    // 周边林地
+    for (let i = 0; i < cols * rows * 0.12; i++) {
+      const c = Math.floor(Math.random() * cols), r = Math.floor(Math.random() * rows);
+      const cell = m.cells[r][c];
+      if (['open','grass'].includes(TERRAIN[cell.t].id)) setT(c, r, Math.random() < 0.5 ? 'forest' : 'brush');
+    }
+    // 周围村落
+    for (let i = 0; i < 6; i++) {
+      const c = Math.floor(Math.random() * cols), r = Math.floor(Math.random() * rows);
+      if (['open','grass','forest','brush'].includes(TERRAIN[m.cells[r][c].t].id))
+        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++)
+          if (Math.random() < 0.6) setT(c + dc, r + dr, 'village');
+    }
+    // 地形起伏
+    for (let i = 0; i < cols * rows * 0.08; i++)
+      setE(Math.floor(Math.random() * cols), Math.floor(Math.random() * rows), Math.floor(Math.random() * 3));
+    return m;
+  }
+
+  function buildTaiwan(cols, rows) {
+    const m = makeMap(cols, rows, 'sea');
+    const setT = (c, r, id) => { if (c >= 0 && r >= 0 && c < cols && r < rows) m.cells[r][c].t = T_IDX[id]; };
+    const setE = (c, r, v) => { if (c >= 0 && r >= 0 && c < cols && r < rows) m.cells[r][c].elev = v; };
+
+    const seaEnd   = Math.floor(cols * 0.34);
+    const beachEnd = Math.floor(cols * 0.44);
+    const plainEnd = Math.floor(cols * 0.62);
+
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      if (c < seaEnd) setT(c, r, 'sea');
+      else if (c < beachEnd) setT(c, r, Math.random() < 0.5 ? 'beach' : 'sand');
+      else if (c < plainEnd) {
+        setT(c, r, Math.random() < 0.5 ? 'open' : (Math.random() < 0.4 ? 'grass' : 'farm'));
+      } else {
+        // 纵深：北城南山
+        if (r < rows * 0.55) {
+          setT(c, r, Math.random() < 0.55 ? 'city' : 'village');
+        } else {
+          setT(c, r, Math.random() < 0.5 ? 'hill' : (Math.random() < 0.4 ? 'mount' : 'forest'));
+          setE(c, r, Math.random() < 0.5 ? 1 : 2);
+        }
+      }
+    }
+    // 港口/机场
+    const portR = Math.floor(rows * 0.35);
+    for (let c = seaEnd - 3; c < seaEnd + 2; c++)
+      for (let r = portR - 2; r <= portR + 2; r++) setT(c, r, 'industry');
+    // 城市加密
+    for (let i = 0; i < cols * rows * 0.10; i++) {
+      const c = plainEnd + Math.floor(Math.random() * (cols - plainEnd - 2));
+      const r = Math.floor(Math.random() * rows);
+      if (r < rows * 0.55) setT(c, r, 'capital');
+    }
+    return m;
+  }
+
+  MTW.override('genMapByType', orig => function (type, cols, rows) {
+    if (type === 'airport') return buildAirport(cols, rows);
+    if (type === 'taiwan')  return buildTaiwan(cols, rows);
+    return orig(type, cols, rows);
+  });
+
+  MTW.addMapType('airport', { n: '机场战', icon: '✈', desc: '跑道·航站楼·机库' });
+  MTW.addMapType('taiwan',  { n: '两栖战', icon: '⚓', desc: '海峡·滩头·纵深' });
+
+  /* ---------- 2. 战役加载核心 ---------- */
+  function applyCampaign(c) {
+    if (!c || !c.id) throw new Error('战役数据缺少 id');
+
+    // 2.1 生成地图
+    const mt = c.mapType || 'encounter';
+    const ms = c.mapSize || 'large';
+    initGame(mt, ms);
+
+    // 2.2 清空自动部署
+    G.units = []; G.wrecks = []; G.effects = []; UID = 1;
+
+    // 2.3 按 map 部署
+    const unitMap = c.unit_map || {};
+    const resolveId = key => unitMap[key] || key;
+    const factions = c.factions || ['US', 'CN'];
+    const natToSide = { [factions[0]]: 0, [factions[1]]: 1 };
+
+    let deployed = 0, missing = 0;
+    Object.entries(c.deployments || {}).forEach(([nat, list]) => {
+      const side = natToSide[nat];
+      if (side === undefined) return;
+      list.forEach(d => {
+        const id = resolveId(d.key);
+        const def = DEF_BY_ID[id];
+        if (!def) { missing++; console.warn('[campaign] 未知单位:', d.key, '→', id); return; }
+        spawn(def, side, d.c, d.r, d.facing !== undefined ? d.facing : (side === 0 ? 0 : 3));
+        deployed++;
+      });
+    });
+
+    // 2.4 设置战役状态
+    G.campaign = {
+      data: c,
+      objectives: c.objectives || {},
+      maxTurns: c.turns || 15,
+      startTurn: G.turn,
+      status: 'running',
+      captures: {},
+      history: []
+    };
+
+    // 2.5 设置阵营信息
+    G.sideNat = [factions[0], factions[1]];
+    const s0 = document.getElementById('natSide0'), s1 = document.getElementById('natSide1');
+    if (s0 && NAT_INFO[factions[0]]) s0.value = factions[0];
+    if (s1 && NAT_INFO[factions[1]]) s1.value = factions[1];
+
+    // 2.6 重算
+    computeEW(); recalcVisibility(); updateUI(); draw();
+
+    log(`📖 战役【${c.name}】开始`, 'lg-ok');
+    log(`🎯 ${describeObjectives(c.objectives)}`, 'lg-info');
+    log(`部署 ${deployed} 单位（${missing ? missing + ' 未识别' : '全部识别'}）`, 'lg-sys');
+  }
+
+  function describeObjectives(obj) {
+    if (!obj) return '无特别目标';
+    const parts = [];
+    if (obj.capture_hexes) parts.push(`夺取 ${obj.capture_hexes.map(h => h.name).join('、')}`);
+    if (obj.survive_turns) parts.push(`坚持 ${obj.survive_turns} 回合`);
+    if (obj.eliminate_all) parts.push('歼灭全部敌军');
+    return parts.join(' · ') || '常规战斗';
+  }
+
+  /* ---------- 3. 每回合结算 ---------- */
+  function hexOccSide(c, r) {
+    const u = G.units.find(u => !u.dead && u.c === c && u.r === r);
+    return u ? u.side : -1;
+  }
+
+  function checkCampaignEnd() {
+    const c = G.campaign;
+    if (!c || c.status !== 'running') return;
+    const obj = c.objectives || {};
+
+    // 采集占领状态
+    const caps = {};
+    (obj.capture_hexes || []).forEach(h => { caps[h.name] = hexOccSide(h.c, h.r); });
+    c.captures = caps;
+
+    const myAlive  = G.units.filter(u => !u.dead && u.side === 0).length;
+    const foeAlive = G.units.filter(u => !u.dead && u.side === 1).length;
+
+    // 蓝方全灭
+    if (myAlive === 0) { finishCampaign(1, 'annihilation'); return; }
+    // 红方全灭
+    if (foeAlive === 0 && obj.eliminate_all) { finishCampaign(0, 'annihilation'); return; }
+
+    // 时间到
+    if (G.turn > c.maxTurns) {
+      const capsAll = (obj.capture_hexes || []).every(h => caps[h.name] === 0);
+      finishCampaign(capsAll ? 0 : 1, capsAll ? 'objectives' : 'timeout');
+      return;
+    }
+
+    // 提前达成：全部目标点已占
+    if ((obj.capture_hexes || []).length > 0) {
+      const capsAll = obj.capture_hexes.every(h => caps[h.name] === 0);
+      if (capsAll && G.turn > c.startTurn) {
+        finishCampaign(0, 'objectives');
+        return;
+      }
+    }
+  }
+
+  function finishCampaign(winner, reason) {
+    const c = G.campaign;
+    if (!c) return;
+    c.status = 'finished';
+    G.gameOver = true;
+    const wn = winner === 0 ? '蓝方' : '红方';
+    const tag = reason === 'objectives' ? '目标达成'
+              : reason === 'timeout'    ? '超时'
+              : reason === 'annihilation' ? '全灭' : '结束';
+    log(`=== 战役结束：${wn}胜 (${tag}) ===`, winner === 0 ? 'lg-ok' : 'lg-hit');
+    addEffect('text', Math.floor(G.map.cols / 2), Math.floor(G.map.rows / 2),
+      { dur: 200, text: `${wn}胜`, color: winner === 0 ? '#3fb950' : '#f85149' });
+    draw();
+  }
+
+  /* ---------- 4. UI：战役选择 ---------- */
+  function buildCampaignUI() {
+    const top = document.getElementById('topbar');
+    if (!top || document.getElementById('btnCampaign')) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'btnCampaign';
+    btn.textContent = '📖 战役';
+    const anchor = document.getElementById('btnNew');
+    if (anchor) anchor.after(btn); else top.insertBefore(btn, top.firstChild);
+
+    btn.onclick = openCampaignModal;
+  }
+
+  async function openCampaignModal() {
+    let modal = document.getElementById('campaignModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'campaignModal';
+      modal.className = 'modal';
+      modal.innerHTML = `
+        <div class="modalBox" style="max-width:760px">
+          <h2>📖 战役选择</h2>
+          <div id="campaignList" class="grid2"></div>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <button id="campClose" class="sm">关闭</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      document.getElementById('campClose').onclick = () => modal.classList.remove('on');
+    }
+
+    const listEl = document.getElementById('campaignList');
+    listEl.innerHTML = '<div class="hint">加载中…</div>';
+
+    let campaigns = [];
+    try {
+      const res = await fetch('campaigns/index.json', { cache: 'no-store' });
+      if (res.ok) campaigns = await res.json();
+    } catch { /* 忽略 */ }
+
+    if (!campaigns.length) {
+      listEl.innerHTML = '<div class="hint">未找到 campaigns/index.json</div>';
+    } else {
+      listEl.innerHTML = campaigns.map(c => `
+        <div class="mapTypeCard" data-id="${c.id}" style="cursor:pointer">
+          <span class="mt-icon">${c.icon || '📖'}</span>
+          <div class="mt-name">${c.name}</div>
+          <div class="mt-desc">${c.desc || ''}</div>
+        </div>`).join('');
+      listEl.querySelectorAll('.mapTypeCard').forEach(el => {
+        el.onclick = async () => {
+          modal.classList.remove('on');
+          await window.loadCampaign('campaigns/' + el.dataset.id + '.json');
+        };
+      });
+    }
+    modal.classList.add('on');
+  }
+
+  window.loadCampaign = async function (src) {
+    try {
+      let c = src;
+      if (typeof src === 'string') {
+        const res = await fetch(src, { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        c = await res.json();
+      }
+      applyCampaign(c);
+    } catch (e) {
+      log(`❌ 战役加载失败: ${e.message}`, 'lg-hit');
+      console.error(e);
+    }
+  };
+
+  /* ---------- 5. 钩子 ---------- */
+  MTW.defineMod({
+    id: 'campaign-loader',
+    name: '战役加载器',
+    version: '1.0',
+    setup(api) {
+      // 回合结束检查目标
+      api.on('afterTurnEnd', () => {
+        if (G.campaign && G.campaign.status === 'running') checkCampaignEnd();
+      });
+      // initGame 清空战役
+      api.override('initGame', orig => function (a, b) {
+        G.campaign = null;
+        return orig(a, b);
+      });
+    }
+  });
+
+  if (document.readyState !== 'loading') buildCampaignUI();
+  else window.addEventListener('DOMContentLoaded', buildCampaignUI);
+
+  console.log('[campaign-loader] 就绪');
+})();
